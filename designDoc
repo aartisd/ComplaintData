@@ -1,0 +1,53 @@
+There are 2 MODULES in ComplaintData service
+
+Complaint Manager module:
+It scrapes the data from the website(for now complaintData.html) and stores it in a map called ComplaintMap.
+
+Data structure:
+
+ComplaintMap is map with key as areaCode(string) and value as a commentMap.
+commentMap is a map with key as the full phone number(string) and value as slice of comment strings.
+
+type commentMap map[string][]string
+
+var ComplaintMap = make(map[string]commentMap)
+
+INSERT DATA in COMPLAINT MAP
+In the Init a go routine is launched every 60 seconds to read the data from the html file and refresh the contents of the ComplaintMap.
+For now we replace the ComplaintMap with new data which we read from the html file. That ways we dont have to worry about the entries which were removed from the complaint list.
+
+When we read a new entry we check to see if a map entry for that area code exists,
+ If it exists then add we check to see if a map entry for that phone number exists in the comment map,
+   If it exists we simply append the new comment in the comments slice for for this phone number
+   If not we create a new map entry for this phone number in the comment map and create a new slice with first comment for this phone number
+ If entry for area code does not exist we add a new entry for this area code in the complaint Map and make a new commentMap with first comment for this phone number
+
+GET DATA FROM COMPLAINT MAP
+
+There are 2 scenarios here
+Get all data
+We simply traverse through the Complaint map and add complaint obj entries for each area code in the Complaint list and return this list to web service handler to process further.
+Get data by area code
+We look for the particular area code to be present in the ComplaintMap and if so add all the entries for that area code and return the list for further processing by the Webservice handler
+
+
+Handler Module:
+
+The handler module handles get all or get by area code web service requests.
+It gets the information it needs from the complaint manager module and then marshalls all the data to align with the following structures to create json responses which it sends out as response.
+type ComplaintList struct {
+	Complaints []ComplaintEntry
+}
+
+type ComplaintEntry struct {
+	AreaCode         string 	  `json:"Area Code"`
+	PhoneNumEntries  []PhoneNumEntry
+}
+
+type PhoneNumEntry struct {
+	PhoneNumber string 	`json:"Phone Number"`
+	NComments   int 	`json:"NumberOfComments"`
+	Comments    []string    `json:"Comments"`
+}
+
+
