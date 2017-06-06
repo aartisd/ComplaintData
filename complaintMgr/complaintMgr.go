@@ -9,6 +9,7 @@ import (
 
 	"io/ioutil"
 	"bytes"
+
 )
 type ComplaintList struct {
 	Complaints []ComplaintEntry
@@ -82,6 +83,7 @@ func scrapeComplaintData() {
 	byteData, err := ioutil.ReadFile("complaintData.html")
 	if err != nil {
 		panic(err)
+		return
 	}
 	b := bytes.NewReader(byteData)
 	z := html.NewTokenizer(b)
